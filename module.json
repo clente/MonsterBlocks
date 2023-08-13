@@ -63,7 +63,7 @@
 	],
 	"manifest": "https://github.com/clente/MonsterBlocks/releases/latest/download/module.json",
 	"url": "https://github.com/clente/MonsterBlocks",
-	"download": "https://github.com/clente/MonsterBlocks/releases/latest/download/monsterblock.zip",
+	"download": "https://github.com/clente/MonsterBlocks/archive/refs/heads/master.zip",
 	"readme": "https://github.com/zeel01/MonsterBlocks/blob/master/readme.md",
 	"bugs": "https://github.com/zeel01/MonsterBlocks/issues",
 	"allowBugReporter": true,
