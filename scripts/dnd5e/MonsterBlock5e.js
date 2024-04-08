@@ -76,6 +76,7 @@ export default class MonsterBlock5e extends dnd5e.applications.actor.ActorSheet5
 		this.prepMovement(data);
 		this.prepSenses(data);
 		this.updateDamageImmunityResistanceVulnerabilityText(data);
+		this.setupConditionImmunityText(data);
 
 		data.flags = {};
 		data.allFlags = [];
@@ -344,7 +345,7 @@ export default class MonsterBlock5e extends dnd5e.applications.actor.ActorSheet5
 	}
 	prepDamageTypeMenu(id, label, attrMenu) {
 		let menu = this.addMenu(id, game.i18n.localize(label), attrMenu);
-		this.getTraitChecklist(id, menu, `system.traits.${id}`, "damage-type", CONFIG.DND5E.damageResistanceTypes);
+		this.getTraitChecklist(id, menu, `system.traits.${id}`, "damage-type", CONFIG.DND5E.damageTypes);
 		return menu;
 	}
 	prepConditionTypeMenu(id, label, attrMenu) {
@@ -380,6 +381,12 @@ export default class MonsterBlock5e extends dnd5e.applications.actor.ActorSheet5
 			trait.visible = trait.physical || regularTypes.size > 0;
 		});
 	}
+	setupConditionImmunityText(data)
+	{
+		const trait = data.system.traits["ci"];
+		trait.selected = trait.value;
+		trait.visible = trait.selected.size > 0;
+	}
 	/**
 	 * This method creates MenuItems and populates the target menu for trait lists.
 	 *
@@ -391,10 +398,10 @@ export default class MonsterBlock5e extends dnd5e.applications.actor.ActorSheet5
 	 * @memberof MonsterBlock5e
 	 */
 	getTraitChecklist(id, menu, target, itemType, traitList) {
-		Object.entries(traitList).forEach(([d, name]) => {
+		Object.entries(traitList).forEach(([d, traitData]) => {
 			let flag = this.actor.system.traits[id].value.has(d);
 			menu.add(new MenuItem(itemType, {
-				d, name, flag,
+				d, name: traitData.label, flag,
 				target: target,
 				icon: flag ? '<i class="fas fa-check"></i>' : '<i class="far fa-circle"></i>'
 			}, (m) => {
@@ -569,12 +576,12 @@ export default class MonsterBlock5e extends dnd5e.applications.actor.ActorSheet5
 				showLabel: move != "walk",
 				label: game.i18n.localize(`DND5E.Movement${moveNameCaps}`).toLowerCase(),
 				value: speed > 0 ? speed : move != "walk" ? "" : "0",
-				unit: data.system.attributes.movement.units + game.i18n.localize("MOBLOKS5E.SpeedUnitAbbrEnd"),
+				unit: (data.system.attributes.movement.units ?? Object.keys(CONFIG.DND5E.movementUnits)[0]) + game.i18n.localize("MOBLOKS5E.SpeedUnitAbbrEnd"),
 				key: `system.attributes.movement.${move}`
 			});
 		}
 
-		data.movement = movement;
+		data.movement = movement.filter(m => m.value || m.name == "walk");
 	}
 
 	/**
@@ -611,13 +618,13 @@ export default class MonsterBlock5e extends dnd5e.applications.actor.ActorSheet5
 				name: sense,
 				label: game.i18n.localize(`DND5E.Sense${senseNameCaps}`).toLowerCase(),
 				value: sense == "special" ? range : range > 0 ? range : "",
-				unit: data.system.attributes.senses.units + game.i18n.localize("MOBLOKS5E.SpeedUnitAbbrEnd"),
-				key: `data.attributes.senses.${sense}`
+				unit: (data.system.attributes.senses.units ?? Object.keys(CONFIG.DND5E.movementUnits)[0]) + game.i18n.localize("MOBLOKS5E.SpeedUnitAbbrEnd"),
+				key: `system.attributes.senses.${sense}`
 			});
 		}
 
 		const special = senses.pop();
-		data.senses = senses;
+		data.senses = senses.filter(s => s.value);
 		data.specialSenses = {
 			passivePerception: this.getPassivePerception(),
 			special
@@ -1143,12 +1150,6 @@ export default class MonsterBlock5e extends dnd5e.applications.actor.ActorSheet5
 		this.lastValue = undefined;
 		this.lastSelection = {};
 		return super.close(...args);
-	}
-
-	async maximize() {
-		// this led to some sort of infinite resize loops
-		// await super.maximize();
-		await this.render(true);
 	}
 
 	/**
